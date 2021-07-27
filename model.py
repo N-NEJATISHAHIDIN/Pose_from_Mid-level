@@ -11,9 +11,8 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 
 class PoseEstimationModel(torch.nn.Module):
-  def __init__(self, in_channels):
+  def __init__(self, in_channels,num_bins):
     super(PoseEstimationModel, self).__init__()
-
 
     self.cnn_layers = Sequential(
         # Defining a 2D convolution layer
@@ -24,7 +23,8 @@ class PoseEstimationModel(torch.nn.Module):
         nn.ReLU(),
         nn.Linear(512, 128),
         nn.ReLU(),
-        nn.Linear(128, 8),
+        nn.Linear(128, num_bins),
+        nn.ReLU(),
     )
 
   def forward(self, x):
