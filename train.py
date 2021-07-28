@@ -1,19 +1,39 @@
 from model import *
 from data_loader import PoseDataset
+import json
+import pandas as pd
+import torch
+from utills import *
 
 num_epochs = 500
 batch_size = 20
 learning_rate = 0.00001
 num_bins = 8
 in_channels = 64
+input_path = "../../Datasets/pix3d"
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print ('device', device)
 
-train_dataset = ASLDataset(input_path, "train")
+
+test_dict = eval(open("pix3d_s1_test.json",mode='r',encoding='utf-8').read())
+test_im_list = pd.DataFrame(test_dict["images"])["file_name"]
+
+train_dict = eval(open("pix3d_s1_train.json",mode='r',encoding='utf-8').read())
+train_im_list = pd.DataFrame(train_dict["images"])["file_name"]
+
+csv_file = open(input_path + "/Pix3D/Pix3D.txt")
+data_f = pd.read_csv(csv_file)
+#all infor about all imgs in all categories
+dict_pix3d = np.asarray(data_f)
+raw_labels = pd.DataFrame(dict_pix3d[:,5:])
+labels  = generate_label(raw_labels, num_bins)
+
+
+train_dataset = PoseDataset(input_path, train_dict, labels )
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=6)
 
-test_dataset = ASLDataset(input_path, "test")
+test_dataset = PoseDataset(input_path,test_dict, labels)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=6)
 
 model = PoseEstimationModel(in_channels, num_bins)
@@ -43,9 +63,9 @@ for epoch in range(num_epochs):
 		# update model weights
 		optimizer.step()
 
-        if (i+1) % 5 == 0:
-            print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}')
-            
+	if (i+1) % 5 == 0:
+	    print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}')
+	    
 	for i, (inputs, labels) in enumerate(test_dataloader):
 		inputs = inputs.to(device)
 		labels = labels.to(device)
