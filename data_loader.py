@@ -26,38 +26,21 @@ class PoseDataset(torch.utils.data.Dataset):
     
     def __getitem__(self, index):
 
-        ID = self.list_ids[index][5]
+        ID = self.list_ids[index]
 
-        if(ID[-4:] == "jpeg" or ID[-4:] == "tiff"):
-            
-            # read RGB, read mask, read boundries, read normals
-            X = read_image(self.path  + "/Pix3D/crop/"+ID[5:-4]+"png")
-            Z = read_image(self.path  + "/Pix3D/crop_mask/"+ID[5:-4]+"png")[1,:,:]
-            
-          
-        else:
-            
-            # read RGB, read mask, read boundries, read normals
-            X = read_image(self.path  + "/Pix3D/crop/"+ID[5:-4]+"png")
-            Z = read_image(self.path  + "/Pix3D/crop_mask/"+ID[5:-3]+"png")[1,:,:]
-       
-        
-        x = TF.to_tensor(TF.resize(X, 256)) * 2 - 1
-        x = (x.unsqueeze_(0)).cuda()
+        # X = Image.open(self.path  + "/Pix3D/crop/" + ID[4:].split(".")[0]+".png")
+        Z = read_image(self.path  + "/Pix3D/crop_mask/" + ID[4:].split(".")[0]+".png")
+        # ,interpolation = Image.NEAREST
+        mask = transforms.Resize((16,16))(Z)
+        out = mask[0].reshape(1,16,16)
 
-        # Transform to normals feature
-        edge_temp = (visualpriors.representation_transform(x, 'edge_texture', device='cuda:0'))[0]
-        normal_temp = (visualpriors.representation_transform(x, 'normal', device='cuda:0'))[0]
+        edge_temp = torch.load(self.path  + '/Pix3D/featurs/normal/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
+        normal_temp = torch.load(self.path  + '/Pix3D/featurs/edge_texture/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
 
-        #labels   
-        y =  torch.tensor((self.labels.loc["crop/"+ID[5:]]).values[-3:])
-        return (edge_temp, normal_temp), y      
-    
-    
-    
-    
-    
-    
-    
-    
-    
+        #labels
+        y =  torch.tensor((self.labels[self.labels.index.str.contains( "crop/"+ID[4:].split(".")[0])]).values[-3:])
+        #edge_temp.float(), 
+        try:
+            return torch.cat((normal_temp.float(), edge_temp.float(), out.float())), y[0][0]
+        except:
+            print(y,ID)
