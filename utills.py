@@ -41,7 +41,7 @@ def generate_label(data, n_bins):
 
         
     label = data
-    
+
     out = np.digitize(reg_label[:,0],bins_degree,right=True)-1
     out1 = np.digitize(reg_label[:,1],bins_degree_2,right=True)-1
     out2 = np.digitize(reg_label[:,2],bins_radian,right=True)-1
@@ -54,11 +54,10 @@ def generate_label(data, n_bins):
     #out1[out1[:]>2] = 0
     #out2[out2[:]>3] = 0
     
-    label["az"]=out
+    label["az"] =out
     label["ele"]=out1
     label["inp"]=out2
-    label.set_index([0])
-    
+    label = label.set_index([0])
     return label[["az","ele","inp"]]
     
     
