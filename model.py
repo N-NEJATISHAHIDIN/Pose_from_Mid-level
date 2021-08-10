@@ -11,34 +11,8 @@ from torch.autograd import Variable
 from torch.nn import Sequential
 from torch import nn
 
-# class PoseEstimationModelMaskedFeatures(torch.nn.Module):
-#   def __init__(self, in_channels,num_bins):
 
-#     super().__init__()
-
-#     self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=3, stride=2)
-#     self.Rel = nn.ReLU()
-#     self.flat = nn.Flatten()
-#     self.fc1 = nn.Linear(32 * 7 * 7, 512)
-#     self.fc2 = nn.Linear(512, 128)
-#     self.fc3 = nn.Linear(128, num_bins)
-
-
-
-#   def forward(self, x):
-
-#     x = x[:,-1,:,:].T/255*x[:,:-1,:,:].T
-#     x = self.conv1(x.T)
-#     x = self.Rel(x)
-#     x = self.flat(x)
-#     x = self.fc1(x)
-#     x = self.fc2(x)
-#     x = self.fc3(x)
-#     return x
-
-
-
-class PoseEstimationModel(torch.nn.Module):
+class PoseEstimationModel_baseline(torch.nn.Module):
   def __init__(self, in_channels,num_bins):
     super(PoseEstimationModel, self).__init__()
 
@@ -51,8 +25,8 @@ class PoseEstimationModel(torch.nn.Module):
     self.fc3 = nn.Linear(128, num_bins)
 
 
-  def forward(self, x):
-
+  def forward(self, x,mask):
+    x = torch.cat(x,mask)
     x = self.conv1(x)
     x = self.Rel(x)
     x = self.flat(x)
@@ -61,4 +35,147 @@ class PoseEstimationModel(torch.nn.Module):
     x = self.fc3(x)
 
     return x
+
+class PoseEstimationModel_MaskedFeatures(torch.nn.Module):
+  def __init__(self, in_channels,num_bins):
+
+    super().__init__()
+
+    self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=3, stride=2)
+    self.Rel = nn.ReLU()
+    self.flat = nn.Flatten()
+    self.fc1 = nn.Linear(32 * 7 * 7, 512)
+    self.fc2 = nn.Linear(512, 128)
+    self.fc3 = nn.Linear(128, num_bins)
+
+
+
+  def forward(self, x, mask):
+
+    x = mask.T/255*x.T
+    x = self.conv1(x.T)
+    x = self.Rel(x)
+    x = self.flat(x)
+    x = self.fc1(x)
+    x = self.fc2(x)
+    x = self.fc3(x)
+    return x
+
+class PoseEstimationModelUpsampel_V1_MaskedFeatures(torch.nn.Module):
+  def __init__(self, in_channels,num_bins, mask_size):
+
+    super().__init__()
+    self.convT1 = nn.ConvTranspose2d(in_channels, 8, kernel_size=2, stride=2)
+    self.convT2 = nn.ConvTranspose2d(8, 8, kernel_size=2, stride=2)
+    # self.convT3 = nn.ConvTranspose2d(8, 8, kernel_size=2, stride=2)
+
+    self.conv1 = nn.Conv2d(8, 16, kernel_size=3, stride=2)
+    self.conv1 = nn.Conv2d(8, 16, kernel_size=3, stride=2)
+    self.Rel = nn.ReLU()
+    self.flat = nn.Flatten()
+    self.fc1 = nn.Linear(16 * 31 * 31, 512)
+    self.fc2 = nn.Linear(512, 128)
+    self.fc3 = nn.Linear(128, num_bins)
+
+  def forward(self, x, mask,flag):
+
+    # print(mask_size)
+    x = self.convT1(x)
+    x = self.convT2(x)
+    # x = self.convT3(x)
+    x = self.Rel(x)
+    if (flag == 1):
+        x = mask.T/255*x.T
+        x = x.T
+    x = self.conv1(x)
+    # print(x.shape)
+    x = self.Rel(x)
+    x = self.flat(x)
+    x = self.fc1(x)
+    x = self.Rel(x)
+    x = self.fc2(x)
+    x = self.fc3(x)
+    # x = self.Rel(x)
+    return x
+
+class PoseEstimationModelUpsampel_V1_MaskAsChannel(torch.nn.Module):
+  def __init__(self, in_channels,num_bins, mask_size):
+
+    super().__init__()
+    self.convT1 = nn.ConvTranspose2d(in_channels, 8, kernel_size=2, stride=2)
+    self.convT2 = nn.ConvTranspose2d(8, 8, kernel_size=2, stride=2)
+    # self.convT3 = nn.ConvTranspose2d(8, 8, kernel_size=2, stride=2)
+    self.bn = nn.BatchNorm1d(512)
+
+    self.conv1 = nn.Conv2d(9, 16, kernel_size=3, stride=2)
+    self.Rel = nn.ReLU()
+    self.flat = nn.Flatten()
+    self.fc1 = nn.Linear(16 * 31 * 31, 512)
+    self.fc2 = nn.Linear(512, 128)
+    self.fc3 = nn.Linear(128, num_bins)
+
+  def forward(self, x, mask,flag):
+
+    x = self.convT1(x)
+    x = self.convT2(x)
+    # x = self.convT3(x)
+
+    x = self.Rel(x)
+    # print("x.shape",x.T.shape)
+    # print("mask.shape",mask.T.shape)
+
+    x = torch.cat((x,mask/255),dim = 1)
+    x = self.conv1(x)
+    # print(x.shape)
+    x = self.Rel(x)
+    x = self.flat(x)
+    x = self.fc1(x)
+    # x = self.bn(x)
+    # x = self.Rel(x)
+    x = self.fc2(x)
+    x = self.fc3(x)
+    # x = self.Rel(x)
+    return x
+
+
+# class PoseEstimationModelUpsampel_V2_MaskedFeatures(torch.nn.Module):
+#   def __init__(self, in_channels, num_bins):
+
+#     super().__init__()
+
+#     # self.convT1 = nn.ConvTranspose2d(in_channels, 8, kernel_size=2, stride=2)
+#     # self.convT2 = nn.ConvTranspose2d(8, 8, kernel_size=2, stride=2)
+#     # # self.convT3 = nn.ConvTranspose2d(8, 8, kernel_size=2, stride=2)
+#     # # self.bn = nn.BatchNorm2d()
+#     self.conv1 = nn.Conv2d(8, 16, kernel_size=3, stride=2)
+#     # self.Rel = nn.ReLU()
+#     self.flat = nn.Flatten()
+#     self.fc1 = nn.Linear(16 * 31 * 31, 512)
+#     self.convT1 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
+#     self.fc2 = nn.Linear(512, 128)
+#     self.fc3 = nn.Linear(128, num_bins)
+
+#   def forward(self, x, mask, flag):
+
+#     # print(mask_size)
+#     x = self.convT1(x)
+#     x = self.convT2(x)
+#     # x = self.convT3(x)
+#     x = self.bn(x)
+#     x = self.Rel(x)
+#     if (flag == 1):
+#         x = mask.T/255*x.T
+#         x = x.T
+#     x = self.conv1(x)
+#     # print(x.shape)
+#     x = self.Rel(x)
+#     x = self.flat(x)
+#     x = self.fc1(x)
+#     x = self.Rel(x)
+#     x = self.fc2(x)
+#     x = self.fc3(x)
+#     # x = self.Rel(x)
+#     return x
+
+
 
