@@ -65,8 +65,8 @@ class PoseEstimationModelUpsampel_V1_MaskedFeatures(torch.nn.Module):
   def __init__(self, in_channels,num_bins, mask_size):
 
     super().__init__()
-    self.convT1 = nn.ConvTranspose2d(in_channels, 8, kernel_size=2, stride=2)
-    self.convT2 = nn.ConvTranspose2d(8, 8, kernel_size=2, stride=2)
+    self.convT1 = nn.ConvTranspose2d(in_channels, 12, kernel_size=2, stride=2)
+    self.convT2 = nn.ConvTranspose2d(12, 8, kernel_size=2, stride=2)
     # self.convT3 = nn.ConvTranspose2d(8, 8, kernel_size=2, stride=2)
 
     self.conv1 = nn.Conv2d(8, 16, kernel_size=3, stride=2)

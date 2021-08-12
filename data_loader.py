@@ -11,14 +11,16 @@ import torchvision.transforms.functional as TF
 import visualpriors
 import subprocess
 
+
 class PoseDataset(torch.utils.data.Dataset):
     
-    def __init__(self, path, list_ids, labels, mask_size):
+    def __init__(self, path, list_ids, labels, mask_size, added_feature):
         
         self.labels = labels
         self.list_ids = list_ids
         self.path = path
         self.mask_size = mask_size
+        self.added_feature = added_feature
         
     def __len__(self):
         
@@ -36,12 +38,13 @@ class PoseDataset(torch.utils.data.Dataset):
 
         edge_temp = torch.load(self.path  + '/Pix3D/featurs/normal/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
         normal_temp = torch.load(self.path  + '/Pix3D/featurs/edge_texture/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
-
+        add_feature = torch.load(self.path  + '/Pix3D/featurs/'+ self.added_feature +'/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
+        
         #labels
         y =  torch.tensor((self.labels[self.labels.index.str.contains( "crop/"+ID[4:].split(".")[0])]).values[-3:])
         #edge_temp.float(), 
         try:
-            return (torch.cat((normal_temp.float(), edge_temp.float())),out.float()), y[0][0]
+            return (torch.cat((normal_temp.float(), edge_temp.float(), add_feature.float())),out.float()), y[0][0]
             # , out.float()
         except:
             print(y,ID)
