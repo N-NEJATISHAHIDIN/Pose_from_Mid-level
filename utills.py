@@ -29,11 +29,11 @@ def rotationMatrixToEulerAngles(R) :
 
 
 # generate a list of labels for the dataset.[real pose_x, real pose_y, real pose_z, bin of pose_x, bin of pose_y, bin of pose_z]
-def generate_label(data, n_bins):
+def generate_label(data, n_bins, n_bins_elev = 5):
     
     #generate the bins margin
     _,bins_degree = np.histogram(1, bins=n_bins, range=(0,360))
-    _,bins_degree_2 = np.histogram(1, bins=n_bins, range=(0,360))
+    _,bins_degree_2 = np.histogram(1, bins=n_bins_elev, range=(-51,85))
     _,bins_radian = np.histogram(1, bins=n_bins, range=(-math.pi,math.pi))
     
 
@@ -41,11 +41,11 @@ def generate_label(data, n_bins):
 
         
     label = data
-
+    #reg_label[reg_label[:,0]<0] += 360 
     out = np.digitize(reg_label[:,0],bins_degree,right=True)-1
     out1 = np.digitize(reg_label[:,1],bins_degree_2,right=True)-1
     out2 = np.digitize(reg_label[:,2],bins_radian,right=True)-1
-    out[out[:]==-1] = 0
+
     out1[out1[:]==-1] = 0
     out2[out2[:]==-1] = 0
     

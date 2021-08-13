@@ -62,7 +62,7 @@ class PoseEstimationModel_MaskedFeatures(torch.nn.Module):
     return x
 
 class PoseEstimationModelUpsampel_V1_MaskedFeatures(torch.nn.Module):
-  def __init__(self, in_channels,num_bins, mask_size):
+  def __init__(self, in_channels,num_bins_az, mask_size,num_bins_el):
 
     super().__init__()
     self.convT1 = nn.ConvTranspose2d(in_channels, 12, kernel_size=2, stride=2)
@@ -75,7 +75,8 @@ class PoseEstimationModelUpsampel_V1_MaskedFeatures(torch.nn.Module):
     self.flat = nn.Flatten()
     self.fc1 = nn.Linear(16 * 31 * 31, 512)
     self.fc2 = nn.Linear(512, 128)
-    self.fc3 = nn.Linear(128, num_bins)
+    self.fc3 = nn.Linear(128, num_bins_az)
+    self.fc4 = nn.Linear(128, num_bins_el)
 
   def forward(self, x, mask,flag):
 
@@ -94,9 +95,12 @@ class PoseEstimationModelUpsampel_V1_MaskedFeatures(torch.nn.Module):
     x = self.fc1(x)
     x = self.Rel(x)
     x = self.fc2(x)
-    x = self.fc3(x)
+
+    x_az = self.fc3(x)
+    x_el = self.fc4(x)
+
     # x = self.Rel(x)
-    return x
+    return x_az, x_el
 
 class PoseEstimationModelUpsampel_V1_MaskAsChannel(torch.nn.Module):
   def __init__(self, in_channels,num_bins, mask_size):
