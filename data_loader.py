@@ -42,8 +42,9 @@ class PoseDataset(torch.utils.data.Dataset):
         
         #labels
         y =  torch.tensor((self.labels[self.labels.index.str.contains( "crop/"+ID[4:].split(".")[0])]).values[-3:])
+
         #edge_temp.float(), 
         try:
-            return (torch.cat((normal_temp.float(), edge_temp.float(), add_feature.float())),out.float()), y[0][0], ID.split(".")[0].split("/")[1]
+            return (torch.cat((normal_temp.float(), edge_temp.float(), add_feature.float())),out.float()), (y[0][0],y[0][1],y[0][2]), ID.split(".")[0].split("/")[1]
         except:
             print(y,ID)
