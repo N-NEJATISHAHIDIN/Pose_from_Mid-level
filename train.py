@@ -13,7 +13,8 @@ num_workers = 6
 num_epochs = 9
 batch_size = 20
 learning_rate = 0.001
-num_bins = 8
+num_bins_az = 8
+num_bins_el = 6
 in_channels = 24
 step_size = 3
 input_path = "../../Datasets/pix3d"
@@ -32,7 +33,7 @@ features = ['jigsaw']
 
 
 for feature in features:
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
         print ('device', device)
 
         test_dict = eval(open("pix3d_s1_test.json",mode='r',encoding='utf-8').read())
@@ -43,12 +44,12 @@ for feature in features:
 
         csv_file = open(input_path + "/Pix3D/Pix3D.txt")
         data_f = pd.read_csv(csv_file)
-        #all infor about all imgs in all categories
+        # all infor about all imgs in all categories
         dict_pix3d = np.asarray(data_f)
         raw_labels = pd.DataFrame(dict_pix3d[:,5:])
 
-        labels  = generate_label(raw_labels, num_bins)
-        print(labels)
+        labels  = generate_label(raw_labels, num_bins_az,num_bins_el)
+
         print("The "+ feature + " has been added.")
         train_dataset = PoseDataset(input_path, train_im_list, labels ,mask_size, feature)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
@@ -58,13 +59,14 @@ for feature in features:
         test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
 
-        model = PoseEstimationModelUpsampel_V1_MaskedFeatures(in_channels, num_bins, mask_size)
+        model = PoseEstimationModelUpsampel_V1_MaskedFeatures(in_channels, num_bins_az, mask_size,num_bins_el)
         # model = PoseEstimationModelUpsampel_V1_MaskAsChannel(in_channels, num_bins, mask_size)
         # model = PoseEstimationModel_baseline(in_channels, num_bins)
 
         model.to(device)
 
         criterion = torch.nn.CrossEntropyLoss()
+
         optimizer = torch.optim.Adam(list(model.parameters()), lr=learning_rate)
         n_total_steps = len(train_dataloader)
         scheduler = StepLR(optimizer, step_size=step_size)
@@ -76,22 +78,27 @@ for feature in features:
                         features = inputs[0].to(device)
                         mask = inputs[1].to(device)
 
-                        labels = labels.to(device)
+                        azimuth = labels[0].to(device)
+                        elevation = labels[1].to(device)
+                        
                         model.train()
 
                         optimizer.zero_grad()
                         # compute the model output
                         yhat = model(features,mask,0)
                         # calculate loss
-                        train_loss = criterion(yhat, labels)
+                        train_loss = criterion(yhat[0], azimuth) + criterion(yhat[1], elevation)
                         # credit assignment
                         train_loss.backward()
                         # update model weights
                         optimizer.step()
 
                 total = 0  
+                total_el = 0  
                 correct = 0 
-                correct2 = 0    
+                correct2 = 0  
+                correct_el = 0 
+                correct2_el = 0    
                 model.eval()
                 all_labels = []
                 all_pred = []
@@ -99,32 +106,47 @@ for feature in features:
                 for i, (inputs, labels, cls) in enumerate(test_dataloader):
                         features = inputs[0].to(device)
                         mask = inputs[1].to(device)
-                        labels = labels.to(device)
+
+                        azimuth = labels[0].to(device)
+                        elevation = labels[1].to(device)
                         
                         optimizer.zero_grad()
                         yhat = model(features, mask, 0)
                         #print("yhat : ",yhat)
                         #print("labels : ", labels)
-                        test_loss = criterion(yhat, labels.long())
-                        _, predicted = torch.max(yhat.data, 1)
-                        _, predicted2 = torch.topk(yhat.data, 2, 1)
+                        test_loss = criterion(yhat[0], azimuth) + criterion(yhat[1], elevation)
                         
-                        #print(labels.cpu().tolist())
-                        all_labels.extend(labels.cpu().tolist())
+                        _, predicted = torch.max(yhat[0].data, 1)
+                        _, predicted2 = torch.topk(yhat[0].data, 2, 1)
+                        
+                        _, predicted_el = torch.max(yhat[1].data, 1)
+                        _, predicted2_el = torch.topk(yhat[1].data, 2, 1)
+                        
+                        print("label",azimuth.cpu().tolist())
+                        print("preds", predicted.cpu().tolist() )
+
+                        all_labels.extend(azimuth.cpu().tolist())
                         all_pred.extend(predicted.cpu().tolist())
                         all_cls.extend(list(cls))
 
                         # Total number of labels
-                        total += labels.size(0)
+                        total += azimuth.size(0)
+                        total_el += elevation.size(0)
                         
-                        correct += torch.sum(predicted == labels).item()
-                        correct2 += torch.sum(torch.eq(predicted2, labels.reshape(-1,1))).item()
+                        correct += torch.sum(predicted == azimuth).item()
+                        correct2 += torch.sum(torch.eq(predicted2, azimuth.reshape(-1,1))).item()
+
+                        correct_el += torch.sum(predicted_el == elevation).item()
+                        correct2_el += torch.sum(torch.eq(predicted2_el, elevation.reshape(-1,1))).item()
             
                 accuracy = 100 * correct / total
                 accuracy2 = 100 * correct2 / total
+
+                accuracy_el = 100 * correct_el / total_el
+                accuracy2_el = 100 * correct2_el / total_el
                 
                 print("############################################################################################")
-                print (f'Epoch [{epoch+1}/{num_epochs}], Train Loss: {train_loss.item():.4f}, Test Loss: {test_loss.item():.4f}, Val_Accuracy [{accuracy}], Val_Accuracy2 [{accuracy2}]')
+                print (f'Epoch [{epoch+1}/{num_epochs}], Train Loss: {train_loss.item():.4f}, Test Loss: {test_loss.item():.4f}, Val_Accuracy [{accuracy}], Val_Accuracy2 [{accuracy2}], Val_Accuracy [{accuracy_el}], Val_Accuracy2 [{accuracy2_el}]')
                 print(classification_report(all_labels, all_pred))
                 
                 d2 = (Counter(np.array(all_cls)[np.array(all_labels) ==  np.array(all_pred)]))
