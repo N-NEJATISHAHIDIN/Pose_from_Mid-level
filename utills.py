@@ -33,7 +33,7 @@ def generate_label(data, n_bins, n_bins_elev = 5):
     
     #generate the bins margin
     _,bins_degree = np.histogram(1, bins=n_bins, range=(0,360))
-    _,bins_degree_2 = np.histogram(1, bins=n_bins_elev, range=(-51,85))
+    _,bins_degree_2 = np.histogram(1, bins=n_bins_elev, range=(0,100))
     _,bins_radian = np.histogram(1, bins=n_bins, range=(-math.pi,math.pi))
     
 
