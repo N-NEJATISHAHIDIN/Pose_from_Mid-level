@@ -10,13 +10,13 @@ from collections import Counter
 
 
 num_workers = 6
-num_epochs = 9
+num_epochs = 20
 batch_size = 20
 learning_rate = 0.001
 num_bins_az = 8
-num_bins_el = 6
+num_bins_el = 5
 in_channels = 24
-step_size = 3
+step_size = 5
 input_path = "../../Datasets/pix3d"
 mask_size =64
 
@@ -46,16 +46,17 @@ for feature in features:
         data_f = pd.read_csv(csv_file)
         # all infor about all imgs in all categories
         dict_pix3d = np.asarray(data_f)
-        raw_labels = pd.DataFrame(dict_pix3d[:,5:])
+        raw_labels = pd.DataFrame(dict_pix3d[:,5:]) 
 
+        gt_D_mask_info = raw_labels.set_index([0])
         labels  = generate_label(raw_labels, num_bins_az,num_bins_el)
 
         print("The "+ feature + " has been added.")
-        train_dataset = PoseDataset(input_path, train_im_list, labels ,mask_size, feature)
+        train_dataset = PoseDataset(input_path, train_im_list, labels ,mask_size, feature, gt_D_mask_info)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
         # train_dataset[0]
 
-        test_dataset = PoseDataset(input_path,test_im_list, labels,mask_size, feature)
+        test_dataset = PoseDataset(input_path,test_im_list, labels,mask_size, feature, gt_D_mask_info)
         test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
 
@@ -85,7 +86,7 @@ for feature in features:
 
                         optimizer.zero_grad()
                         # compute the model output
-                        yhat = model(features,mask,0)
+                        yhat = model(features,mask,1)
                         # calculate loss
                         train_loss = criterion(yhat[0], azimuth) + criterion(yhat[1], elevation)
                         # credit assignment
@@ -111,7 +112,7 @@ for feature in features:
                         elevation = labels[1].to(device)
                         
                         optimizer.zero_grad()
-                        yhat = model(features, mask, 0)
+                        yhat = model(features, mask, 1)
                         #print("yhat : ",yhat)
                         #print("labels : ", labels)
                         test_loss = criterion(yhat[0], azimuth) + criterion(yhat[1], elevation)
