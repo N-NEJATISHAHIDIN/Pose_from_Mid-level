@@ -13,8 +13,8 @@ from torch import nn
 
 
 class PoseEstimationModel_baseline(torch.nn.Module):
-  def __init__(self, in_channels,num_bins):
-    super(PoseEstimationModel, self).__init__()
+  def __init__(self, in_channels,num_bins,num_bins_el):
+    super().__init__()
 
     self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=3, stride=2)
 
@@ -23,18 +23,21 @@ class PoseEstimationModel_baseline(torch.nn.Module):
     self.fc1 = nn.Linear(32 * 7 * 7, 512)
     self.fc2 = nn.Linear(512, 128)
     self.fc3 = nn.Linear(128, num_bins)
+    self.fc4 = nn.Linear(128, num_bins_el)
 
 
-  def forward(self, x,mask):
-    x = torch.cat(x,mask)
+  def forward(self, x,mask,flag):
+    #x = torch.cat(x,mask)
     x = self.conv1(x)
     x = self.Rel(x)
     x = self.flat(x)
     x = self.fc1(x)
     x = self.fc2(x)
-    x = self.fc3(x)
+    x_az = self.fc3(x)
+    x_el = self.fc4(x)
 
-    return x
+    # x = self.Rel(x)
+    return x_az, x_el
 
 class PoseEstimationModel_MaskedFeatures(torch.nn.Module):
   def __init__(self, in_channels,num_bins):
@@ -50,7 +53,7 @@ class PoseEstimationModel_MaskedFeatures(torch.nn.Module):
 
 
 
-  def forward(self, x, mask):
+  def forward(self, x, mask,flag):
 
     x = mask.T/255*x.T
     x = self.conv1(x.T)

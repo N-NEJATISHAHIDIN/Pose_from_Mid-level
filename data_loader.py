@@ -15,7 +15,7 @@ from PIL import Image, ImageOps
 
 class PoseDataset(torch.utils.data.Dataset):
     
-    def __init__(self, path, list_ids, labels, mask_size, added_feature, gt_D_mask_info = None):
+    def __init__(self, path, list_ids, labels, mask_size, added_feature=None, gt_D_mask_info = None):
         
         self.labels = labels
         self.list_ids = list_ids
@@ -40,7 +40,10 @@ class PoseDataset(torch.utils.data.Dataset):
         # print(out.shape)
         edge_temp = torch.load(self.path  + '/Pix3D/featurs/normal/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
         normal_temp = torch.load(self.path  + '/Pix3D/featurs/edge_texture/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
-        add_feature = torch.load(self.path  + '/Pix3D/featurs/'+ self.added_feature +'/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
+        features_output = torch.cat((normal_temp.float(), edge_temp.float()))
+        if (self.added_feature is not None):
+            add_feature = torch.load(self.path  + '/Pix3D/featurs/'+ self.added_feature +'/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
+            features_output = torch.cat((normal_temp.float(), edge_temp.float(), add_feature.float()))
         #labels
         y =  torch.tensor((self.labels[self.labels.index.str.contains( "crop/"+ID[4:].split(".")[0])]).values[-3:])
         
@@ -74,7 +77,4 @@ class PoseDataset(torch.utils.data.Dataset):
         # out = mask[0].reshape(1,self.mask_size,self.mask_size)
 
         #edge_temp.float(), 
-        try:
-            return (torch.cat((normal_temp.float(), edge_temp.float(), add_feature.float())),out.float()), (y[0][0],y[0][1],y[0][2]), ID.split(".")[0].split("/")[1]
-        except:
-            print(y,ID)
+        return (features_output,out.float()), (y[0][0],y[0][1],y[0][2]), ID.split(".")[0].split("/")[1],ID

@@ -1,7 +1,13 @@
 import numpy as np
 import math
-
-
+import torch
+from PIL import Image
+import torchvision.transforms.functional as TF
+import visualpriors
+import subprocess
+from PIL import Image, ImageOps
+import torch.nn.functional as F
+from torchvision import transforms
 # Checks if a matrix is a valid rotation matrix.
 def isRotationMatrix(R) :
     Rt = np.transpose(R)
@@ -60,4 +66,35 @@ def generate_label(data, n_bins, n_bins_elev = 5):
     label = label.set_index([0])
     return label[["az","ele","inp"]]
     
+    
+def get_Dmask(az,el,ID,gt_D_mask_info):
+    masks = torch.empty(20,64,64)
+    path = "../../Datasets/pix3d"
+    for i in range(az.shape[0]):
+        im_info = gt_D_mask_info[gt_D_mask_info.index.str.contains( "crop/"+ID[i][4:].split(".")[0])]
+        root_path = path + "/Pix3D/D_mask/"+ im_info.iloc[0][1]+ "/"+ im_info.iloc[0][2]+ "/"+ im_info.iloc[0][3]+".obj"
+        D_mask =  np.array(Image.open(root_path + "/azimuth_{}_Elevation{}.png".format(az[i],el[i])).convert('1'))
+        #print((D_mask==True).any())
+        points_real_mask = np.asarray(np.where(D_mask == 1))
+        #print(points_real_mask)
+        max_x, max_y = np.max(points_real_mask, 1)
+        min_x, min_y = np.min(points_real_mask, 1)
+        #print(max_x, max_y , min_x, min_y)
+
+        dim_y = max_y - min_y
+        dim_x = max_x - min_x
+
+        dim = np.max([dim_x , dim_y])
+        #print(dim)
+        crop_image = torch.from_numpy(D_mask[ min_x : max_x, min_y : max_y])
+        
+        crop_D_mask = F.pad(crop_image, pad=((dim - dim_y)//2, (dim - dim_y)//2, (dim - dim_x)//2, (dim - dim_x)//2) )
+        crop_D_mask = crop_D_mask.reshape(1, crop_D_mask.shape[0], crop_D_mask.shape[1])
+        #print("source_pad.shape:" , crop_D_mask.shape)
+        out = transforms.Resize((64,64))(crop_D_mask)    
+        print(out[0].shape)
+        masks[i] = out[0]
+    return masks.reshape(20,1,64,64)
+
+
     
