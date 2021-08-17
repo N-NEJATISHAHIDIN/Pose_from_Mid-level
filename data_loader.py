@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torchvision.io import read_image
 from torchvision import transforms
 import numpy as np
-
+import cv2
 from PIL import Image
 import torchvision.transforms.functional as TF
 import visualpriors
@@ -49,32 +49,14 @@ class PoseDataset(torch.utils.data.Dataset):
         
         if (self.gt_D_mask_info is not None):
             im_info = self.gt_D_mask_info[self.gt_D_mask_info.index.str.contains( "crop/"+ID[4:].split(".")[0])]
-            root_path = self.path + "/Pix3D/D_mask/"+ im_info.iloc[0][1]+ "/"+ im_info.iloc[0][2]+ "/"+ im_info.iloc[0][3]+".obj"
-            D_mask =  np.array(Image.open(root_path + "/azimuth_{}_Elevation{}.png".format(y[0][0],y[0][1])).convert('1'))
-            #print((D_mask==True).any())
-            points_real_mask = np.asarray(np.where(D_mask == 1))
-            #print(points_real_mask)
-            max_x, max_y = np.max(points_real_mask, 1)
-            min_x, min_y = np.min(points_real_mask, 1)
-            #print(max_x, max_y , min_x, min_y)
-
-            dim_y = max_y - min_y
-            dim_x = max_x - min_x
-
-            dim = np.max([dim_x , dim_y])
-            #print(dim)
-            crop_image = torch.from_numpy(D_mask[ min_x : max_x, min_y : max_y])
+            root_path = self.path + "/Pix3D/D_mask_64/"+ im_info.iloc[0][1]+ "/"+ im_info.iloc[0][2]+ "/"+ im_info.iloc[0][3]+".obj"
+            full_path = root_path + "/azimuth_{}_Elevation{}.png".format(y[0][0],y[0][1])
+            D_mask =  torch.from_numpy(np.asarray(Image.open(full_path).convert('1') , dtype=np.uint8)).reshape(1,64,64)
             
-            crop_D_mask = F.pad(crop_image, pad=((dim - dim_y)//2, (dim - dim_y)//2, (dim - dim_x)//2, (dim - dim_x)//2) )
-            crop_D_mask = crop_D_mask.reshape(1, crop_D_mask.shape[0], crop_D_mask.shape[1])
-            #print("source_pad.shape:" , crop_D_mask.shape)
-            out = transforms.Resize((self.mask_size,self.mask_size))(crop_D_mask)
-            # print(out.shape)
-
             #print(out.shape)
         # Z_D_mask = read_image(self.path  + "/Pix3D/D_mask/" + ID[4:].split(".")[0]+".png")
         # gt_D_mask = transforms.Resize((self.mask_size,self.mask_size))(Z)
         # out = mask[0].reshape(1,self.mask_size,self.mask_size)
 
         #edge_temp.float(), 
-        return (features_output,out.float()), (y[0][0],y[0][1],y[0][2]), ID.split(".")[0].split("/")[1],ID
+        return (features_output,D_mask.float()), (y[0][0],y[0][1],y[0][2]), ID.split(".")[0].split("/")[1],ID
