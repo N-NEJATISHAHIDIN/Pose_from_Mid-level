@@ -55,7 +55,7 @@ class PoseEstimationModel_MaskedFeatures(torch.nn.Module):
 
   def forward(self, x, mask,flag):
 
-    x = mask.T/255*x.T
+    x = mask.T*x.T
     x = self.conv1(x.T)
     x = self.Rel(x)
     x = self.flat(x)
@@ -89,7 +89,7 @@ class PoseEstimationModelUpsampel_V1_MaskedFeatures(torch.nn.Module):
     # x = self.convT3(x)
     x = self.Rel(x)
     if (flag == 1):
-        x = mask.T/255*x.T
+        x = mask.T*x.T
         x = x.T
     x = self.conv1(x)
     # print(x.shape)
@@ -133,7 +133,7 @@ class PoseEstimationModelUpsampel_V1_MaskAsChannel(torch.nn.Module):
     # print("x.shape",x.T.shape)
     # print("mask.shape",mask.T.shape)
 
-    x = torch.cat((x,mask/255),dim = 1)
+    x = torch.cat((x,mask),dim = 1)
     x = self.conv1(x)
     # print(x.shape)
     x = self.Rel(x)

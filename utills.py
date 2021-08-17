@@ -8,6 +8,10 @@ import subprocess
 from PIL import Image, ImageOps
 import torch.nn.functional as F
 from torchvision import transforms
+import os
+from torchvision.utils import save_image
+from tqdm import tqdm
+
 # Checks if a matrix is a valid rotation matrix.
 def isRotationMatrix(R) :
     Rt = np.transpose(R)
@@ -72,29 +76,43 @@ def get_Dmask(az,el,ID,gt_D_mask_info):
     path = "../../Datasets/pix3d"
     for i in range(az.shape[0]):
         im_info = gt_D_mask_info[gt_D_mask_info.index.str.contains( "crop/"+ID[i][4:].split(".")[0])]
-        root_path = path + "/Pix3D/D_mask/"+ im_info.iloc[0][1]+ "/"+ im_info.iloc[0][2]+ "/"+ im_info.iloc[0][3]+".obj"
-        D_mask =  np.array(Image.open(root_path + "/azimuth_{}_Elevation{}.png".format(az[i],el[i])).convert('1'))
-        #print((D_mask==True).any())
-        points_real_mask = np.asarray(np.where(D_mask == 1))
-        #print(points_real_mask)
-        max_x, max_y = np.max(points_real_mask, 1)
-        min_x, min_y = np.min(points_real_mask, 1)
-        #print(max_x, max_y , min_x, min_y)
+        root_path = path + "/Pix3D/D_mask_64/"+ im_info.iloc[0][1]+ "/"+ im_info.iloc[0][2]+ "/"+ im_info.iloc[0][3]+".obj"
+        full_path = root_path + "/azimuth_{}_Elevation{}.png".format(az[i],el[i])
+        D_mask =  torch.from_numpy(np.asarray(Image.open(full_path).convert('1') , dtype=np.uint8))
+        masks[i] = D_mask
 
-        dim_y = max_y - min_y
-        dim_x = max_x - min_x
-
-        dim = np.max([dim_x , dim_y])
-        #print(dim)
-        crop_image = torch.from_numpy(D_mask[ min_x : max_x, min_y : max_y])
-        
-        crop_D_mask = F.pad(crop_image, pad=((dim - dim_y)//2, (dim - dim_y)//2, (dim - dim_x)//2, (dim - dim_x)//2) )
-        crop_D_mask = crop_D_mask.reshape(1, crop_D_mask.shape[0], crop_D_mask.shape[1])
-        #print("source_pad.shape:" , crop_D_mask.shape)
-        out = transforms.Resize((64,64))(crop_D_mask)    
-        print(out[0].shape)
-        masks[i] = out[0]
     return masks.reshape(20,1,64,64)
 
+def generate_Dmask(mask_size = 64):
+    
+    inputpath = "/home/negar/Documents/Datasets/pix3d/Pix3D/D_mask/"
+    output_base = "/home/negar/Documents/Datasets/pix3d/Pix3D/D_mask_128/"
+    
+    for dirpath, dirnames, filenames in os.walk(inputpath):
+    	for files in tqdm(filenames):
+            #print(files,dirpath.split("D_mask"))
 
+            D_mask =  np.array(Image.open(dirpath + "/"+files).convert('1'))
+            #print((D_mask==True).any())
+            points_real_mask = np.asarray(np.where(D_mask == 1))
+            #print(points_real_mask)
+            max_x, max_y = np.max(points_real_mask, 1)
+            min_x, min_y = np.min(points_real_mask, 1)
+            #print(max_x, max_y , min_x, min_y)
+
+            dim_y = max_y - min_y
+            dim_x = max_x - min_x
+
+            dim = np.max([dim_x , dim_y])
+            #print(dim)
+            crop_image = torch.from_numpy(D_mask[ min_x : max_x, min_y : max_y])
+            
+            crop_D_mask = F.pad(crop_image, pad=((dim - dim_y)//2, (dim - dim_y)//2, (dim - dim_x)//2, (dim - dim_x)//2) )
+            crop_D_mask = crop_D_mask.reshape(1, crop_D_mask.shape[0], crop_D_mask.shape[1])
+            #print("source_pad.shape:" , crop_D_mask.shape)
+            out = transforms.Resize((mask_size,mask_size))(crop_D_mask)    
+            #print(type(out))
+            #print(out[0].shape)
+            save_image(out[0].float(), output_base+dirpath.split("D_mask")[1] +"/" + files )
+    
     
