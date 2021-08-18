@@ -40,7 +40,7 @@ The models were evaluated in separate phases.
 *Accuracy for best model per category*:
 
 |<p>Models , </p><p></p>|chair|table|sofa|bed|desk|bookcase|wardrobe|misc|tool|
-| :- | :- | :- | :- | :- |
+| :- | :- | :- | :- | :- |:- | :- | :- | :- | :- |
 |count|1167|417|415|213|154|79|54|20|11|
 |acc\_azimuth |81.1|98.1|90.7|100|54.5|96.2|94.8|81.8|40|
 
@@ -48,6 +48,6 @@ The models were evaluated in separate phases.
 *upsample_gt_D_mask on training. For evaluation, we get top 4 candidate D_masks using upsample_No_mask model. *:
 
 |<p>Models , </p><p></p>|acc\_azimuth|acc\_azimuth2|
-| :- | :- | :- | :- | :- |
+| :- | :- | :- |
 | upsample_gt_D_mask |50.0|77.5|
 problem : model relies to much on mask (60%)
