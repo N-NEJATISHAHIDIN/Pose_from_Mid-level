@@ -1,0 +1,194 @@
+{"baseline_NoMask": {
+
+	"model_name" : "PoseEstimationModel_baseline_NoMask_maskAzChannel_MaskOut",
+	"in_channels" : 16,
+	"num_bins_az" : 8,
+	"mask_size" : 16,
+	"num_bins_el" : 5,
+	"flag" : 0,
+
+	"num_workers" : 6,
+	"num_epochs" : 10,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "no_D_mask"
+},
+"baseline_gt_MaskAzChannel" :{
+
+	"model_name" : "PoseEstimationModel_baseline_NoMask_maskAzChannel_MaskOut",
+	"in_channels" : 17,
+	"num_bins_az" : 8,
+	"mask_size" : 16,
+	"num_bins_el" : 5,
+	"flag" : 1,
+
+	"num_workers" : 6,
+	"num_epochs" : 10,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "no_D_mask"
+
+},
+"baseline_gt_MaskdOut":{
+
+	"model_name" : "PoseEstimationModel_baseline_NoMask_maskAzChannel_MaskOut",
+	"in_channels" : 16,
+	"num_bins_az" : 8,
+	"mask_size" : 16,
+	"num_bins_el" : 5,
+	"flag" : 2,
+
+	"num_workers" : 6,
+	"num_epochs" : 10,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "no_D_mask"
+},
+"baseline_gt_D_MaskAzChannel":{
+
+	"model_name" : "PoseEstimationModel_baseline_NoMask_maskAzChannel_MaskOut",
+	"in_channels" : 17,
+	"num_bins_az" : 8,
+	"mask_size" : 16,
+	"num_bins_el" : 5,
+	"flag" : 1,
+
+	"num_workers" : 6,
+	"num_epochs" : 10,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "gt_D_mask_info"
+},
+"baseline_gt_D_MaskdOut":{
+
+	"model_name" : "PoseEstimationModel_baseline_NoMask_maskAzChannel_MaskOut",
+	"in_channels" : 16,
+	"num_bins_az" : 8,
+	"mask_size" : 16,
+	"num_bins_el" : 5,
+	"flag" : 2,
+
+	"num_workers" : 6,
+	"num_epochs" : 10,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "gt_D_mask_info"
+},
+"upsample_NoMask":{
+	"model_name" : "PoseEstimationModelUpsampel_V1_NoMask_MaskedFeatures",
+	"in_channels" : 16,
+	"num_bins_az" : 8,
+	"mask_size" : 64,
+	"num_bins_el" : 5,
+	"flag" : 0,
+
+	"num_workers" : 6,
+	"num_epochs" : 15,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "no_D_mask"
+
+},
+"upsample_gt_MaskAzChannel":{
+
+	"model_name" : "PoseEstimationModelUpsampel_V1_MaskAsChannel",
+	"in_channels" : 16,
+	"num_bins_az" : 8,
+	"mask_size" : 64,
+	"num_bins_el" : 5,
+	"flag" : 0,
+
+	"num_workers" : 6,
+	"num_epochs" : 15,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "no_D_mask"
+
+},
+"upsample_gt_MaskedOut":{
+
+	"model_name" : "PoseEstimationModelUpsampel_V1_NoMask_MaskedFeatures",
+	"in_channels" : 16,
+	"num_bins_az" : 8,
+	"mask_size" : 64,
+	"num_bins_el" : 5,
+	"flag" : 1,
+
+	"num_workers" : 6,
+	"num_epochs" : 15,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "no_D_mask"
+
+},
+"upsample_gt_D_MaskAzChannel":{
+
+	"model_name" : "PoseEstimationModelUpsampel_V1_MaskAsChannel",
+	"in_channels" : 16,
+	"num_bins_az" : 8,
+	"mask_size" : 64,
+	"num_bins_el" : 5,
+	"flag" : 0,
+
+	"num_workers" : 6,
+	"num_epochs" : 15,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "gt_D_mask_info"
+
+},
+"upsample_gt_D_MaskedOut":{
+
+	"model_name" : "PoseEstimationModelUpsampel_V1_NoMask_MaskedFeatures",
+	"in_channels" : 16,
+	"num_bins_az" : 8,
+	"mask_size" : 64,
+	"num_bins_el" : 5,
+	"flag" : 1,
+
+	"num_workers" : 6,
+	"num_epochs" : 15,
+	"batch_size" : 20,
+	"learning_rate" : 0.001,
+	"step_size": 3,
+
+	"input_path": "../../Datasets/pix3d",
+	"added_feature" : null, 
+	"gt_D_mask_info" : "gt_D_mask_info"
+}}

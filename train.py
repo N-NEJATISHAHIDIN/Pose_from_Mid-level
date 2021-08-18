@@ -111,7 +111,9 @@ for epoch in range(num_epochs):
         all_labels = []
         all_pred = []
         all_cls = []
-        
+        test_eq =0
+
+        match = 0
 
         for i, (inputs, labels, cls,IDS) in enumerate(test_dataloader):
 
@@ -129,70 +131,113 @@ for epoch in range(num_epochs):
                 _, predicted2 = torch.topk(y_hat_top[0].data, 4, 1)
                 _, predicted2_el = torch.topk(y_hat_top[1].data, 2, 1)
 
-                print(predicted2.cpu().numpy().shape, predicted2_el.cpu().numpy().shape)
                 
                 optimizer.zero_grad()
                 
-                for az_prob in range(predicted2.cpu().numpy().shape[1]):
-                        for el_prob in range(predicted2_el.cpu().numpy().shape[1]):
-                                yhat = model(features, get_Dmask(predicted2[:,az_prob],predicted2_el[:,el_prob],IDS,gt_D_mask_info).to(device), 1)
-                                
-                                print("gt_label: ", labels[0])
-                                print("yhat[gt_label]: ", yhat[0].gather( 1,labels[0].to(device).reshape(labels[0].shape[0],1)))
+                output_prob = torch.empty((predicted2.shape[0],4))
+                output_index = torch.empty((predicted2.shape[0],4))
 
-                                print("D_mask_label: ", predicted2[:,az_prob])
-                                print("yhat[D_mask_label]: ", yhat[0].gather( 1,predicted2[:,az_prob].to(device).reshape(predicted2[:,az_prob].shape[0],1)))
+                for dim in range(predicted2.cpu().numpy().shape[1]):
+                #        for el_prob in range(predicted2_el.cpu().numpy().shape[1]):
+                        yhat = model(features, get_Dmask(predicted2[:,dim],elevation,IDS,gt_D_mask_info).to(device), 1)                        
+                        pred_prob,pred_index = torch.max(yhat[0].data, 1)
 
-                                print("predicted_label :", torch.max(yhat[0].data, 1)[1])
-                                print("yhat[predicted_label]:", torch.max(yhat[0].data, 1)[0])
+                        #output_prob[:,dim] = yhat[0].gather( 1,predicted2[:,dim].to(device).reshape(predicted2[:,dim].shape[0],1)).flatten()
+                        
+                        output_prob[:,dim] = pred_prob
+                        output_index[:,dim] = pred_index
 
-                                # print("epoch: ", epoch ,"labels: ",labels[0])
-                                # print("preds d-mask: ",predicted2[:,az_prob])
-                                # print(yhat[0].get_device(),labels[0].to(device).get_device())
-                                # print("yhat yhat: ", yhat[0].gather( 1,labels[0].to(device).reshape(labels[0].shape[0],1)))
-                                # print("yhat d-mask: ", yhat[0].gather( 1,predicted2[:,az_prob].to(device).reshape(predicted2[:,az_prob].shape[0],1)))
-                                # print("yhat top: ", torch.max(yhat[0].data, 1)[0])
+                        #print(pred_index.data == azimuth)
+                        #print(predicted2[:,az_prob] == azimuth)
 
-                test_loss = criterion(yhat[0], azimuth) + criterion(yhat[1], elevation)
+                        # print("gt_label: ", labels[0])
+                        # print("yhat[gt_label]: ", yhat[0].gather( 1,labels[0].to(device).reshape(labels[0].shape[0],1)))
+
+                        # print("D_mask_label: ", predicted2[:,az_prob])
+                        # print("yhat[D_mask_label]: ", yhat[0].gather( 1,predicted2[:,az_prob].to(device).reshape(predicted2[:,az_prob].shape[0],1)))
+
+                        # print("predicted_label :", pred_index)
+                        # print("yhat[predicted_label]:", preds)
+
+
+                print("#############################################################################################")
+                #print(output_prob,predicted2,azimuth)
+                #print(azimuth,predicted2)
                 
-                _, predicted = torch.max(yhat[0].data, 1)
-                _, predicted2 = torch.topk(yhat[0].data, 4, 1)
+                #predicted = torch.argmax(output_prob.data * output_eq_pred_dmask, 1)
+                #print((output_index == predicted2.cpu()) * output_prob)
                 
-                _, predicted_el = torch.max(yhat[1].data, 1)
-                _, predicted2_el = torch.topk(yhat[1].data, 2, 1)
+                #print((output_index == predicted2.cpu())* output_prob)
+                #print(torch.max((output_index == predicted2.cpu()) * output_prob, 1)[1])
+                #print(output_index)
+                print((output_index == predicted2.cpu()))
+                print(torch.sum(torch.sum((output_index == predicted2.cpu()), dim=1)==0))
+
+                test_eq += torch.sum(output_index == predicted2.cpu())
+                predicted = output_index.gather(1, torch.max((output_index == predicted2.cpu()) * output_prob, 1)[1].reshape(azimuth.shape[0],1)).flatten()
+                #print(torch.topk((output_index == predicted2.cpu()) * output_prob,2, 1)[1].reshape(azimuth.shape[0],2))
+                #print(output_index)
+                predicted2 = output_index.gather(1, torch.topk((output_index == predicted2.cpu()) * output_prob,2, 1)[1].reshape(azimuth.shape[0],2))
+                #print(predicted2)
+                #predicted2 = torch.topk((output_index == predicted2.cpu()) * output_prob, 4, 1)[1]
                 
-                print("label",azimuth.cpu().tolist())
-                print("preds", predicted.cpu().tolist() )
+                #output_eq_pred_dmask =  (output_index == predicted2.cpu()  )
+                #print(output_eq_pred_dmask)
+                
+                #output_eq_pred_dmask *=  (output_index == torch.cat((azimuth.cpu().reshape(azimuth.shape[0],1),azimuth.cpu().reshape(azimuth.shape[0],1),azimuth.cpu().reshape(azimuth.shape[0],1),azimuth.cpu().reshape(azimuth.shape[0],1)),dim=1))
+                #print(output_eq_pred_dmask)
+                #print(predicted)
+                #print(output_index)
+
+
+                #predicted = output_index.gather(1, predicted.reshape(predicted.shape[0],1)).flatten()
+                #print(predicted)
+                #yhat = model(features, mask, 1)
+
+                #test_loss = criterion(yhat[0], azimuth) + criterion(yhat[1], elevation)
+                
+                #_, predicted = torch.max(yhat[0].data, 1)
+                # _, predicted2 = torch.topk(yhat[0].data, 4, 1)
+                
+                # _, predicted_el = torch.max(yhat[1].data, 1)
+                # _, predicted2_el = torch.topk(yhat[1].data, 2, 1)
+                
+                # print("label",azimuth.cpu().tolist())
+                # print("preds", predicted.cpu().tolist() )
 
                 all_labels.extend(azimuth.cpu().tolist())
-                all_pred.extend(predicted.cpu().tolist())
+                #all_pred.extend(predicted.cpu().tolist())
                 all_cls.extend(list(cls))
 
                 # Total number of labels
                 total += azimuth.size(0)
                 total_el += elevation.size(0)
-                
-                correct += torch.sum(predicted == azimuth).item()
-                correct2 += torch.sum(torch.eq(predicted2, azimuth.reshape(-1,1))).item()
 
-                correct_el += torch.sum(predicted_el == elevation).item()
-                correct2_el += torch.sum(torch.eq(predicted2_el, elevation.reshape(-1,1))).item()
+                #correct += torch.sum(output_eq_pred_dmask).item()
+                #print(correct)
+                correct += torch.sum(predicted == azimuth.cpu()).item()
+                correct2 += torch.sum(torch.eq(predicted2, azimuth.cpu().reshape(-1,1))).item()
+
+                # correct_el += torch.sum(predicted_el == elevation).item()
+                # correct2_el += torch.sum(torch.eq(predicted2_el, elevation.reshape(-1,1))).item()
     
         accuracy = 100 * correct / total
         accuracy2 = 100 * correct2 / total
 
-        accuracy_el = 100 * correct_el / total_el
-        accuracy2_el = 100 * correct2_el / total_el
+        # accuracy_el = 100 * correct_el / total_el
+        # accuracy2_el = 100 * correct2_el / total_el
         
         print("############################################################################################")
-        print (f'Epoch [{epoch+1}/{num_epochs}], Train Loss: {train_loss.item():.4f}, Test Loss: {test_loss.item():.4f}, Val_Accuracy [{accuracy}], Val_Accuracy2 [{accuracy2}], Val_Accuracy [{accuracy_el}], Val_Accuracy2 [{accuracy2_el}]')
-        print(classification_report(all_labels, all_pred))
+        #print (f'Epoch [{epoch+1}/{num_epochs}], Train Loss: {train_loss.item():.4f}, Test Loss: {test_loss.item():.4f}, Val_Accuracy [{accuracy}], Val_Accuracy2 [{accuracy2}], Val_Accuracy [{accuracy_el}], Val_Accuracy2 [{accuracy2_el}]')
+        print (f'Epoch [{epoch+1}/{num_epochs}], Train Loss: {train_loss.item():.4f}, Val_Accuracy [{accuracy}], Val_Accuracy2 [{accuracy2}]')
+        print(test_eq/total*25)
+        #print(classification_report(all_labels, all_pred))
         
-        d2 = (Counter(np.array(all_cls)[np.array(all_labels) ==  np.array(all_pred)]))
-        d1 = (Counter(all_cls))
-        print(d1) 
-        d3 = dict((k, "%.2f" % ( (float(d2[k]) / d1[k])*100 )) for k in d2)
-        print(d3)
+        #d2 = (Counter(np.array(all_cls)[np.array(all_labels) ==  np.array(all_pred)]))
+        #d1 = (Counter(all_cls))
+        #print(d1) 
+        #d3 = dict((k, "%.2f" % ( (float(d2[k]) / d1[k])*100 )) for k in d2)
+        #print(d3)
 
         scheduler.step()
         

@@ -1,0 +1,19 @@
+####################################### ** upsample_gt_D_MaskAzChannel ** #######################################
+Epoch [5/15], Train Loss: 0.0089, Test Loss: 0.7047, Val_Accuracy [89.96047430830039], Val_Accuracy2 [95.13833992094861], Val_Accuracy [92.37154150197628], Val_Accuracy2 [98.85375494071147]
+              precision    recall  f1-score   support
+
+           0       0.92      0.96      0.94       728
+           1       0.87      0.86      0.87       303
+           2       0.87      0.83      0.85       119
+           3       0.92      0.74      0.82       117
+           4       0.89      0.67      0.76        96
+           5       0.72      0.72      0.72       100
+           6       0.88      0.86      0.87       227
+           7       0.92      0.95      0.94       840
+
+    accuracy                           0.90      2530
+   macro avg       0.87      0.82      0.85      2530
+weighted avg       0.90      0.90      0.90      2530
+
+Counter({'chair': 1167, 'table': 417, 'sofa': 415, 'bed': 213, 'desk': 154, 'bookcase': 79, 'wardrobe': 54, 'misc': 20, 'tool': 11})
+{'table': '81.06', 'sofa': '98.07', 'chair': '90.75', 'wardrobe': '100.00', 'tool': '54.55', 'bookcase': '96.20', 'bed': '94.84', 'desk': '81.82', 'misc': '40.00'}

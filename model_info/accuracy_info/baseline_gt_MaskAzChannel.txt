@@ -1,0 +1,19 @@
+####################################### ** baseline_gt_MaskAzChannel ** #######################################
+Epoch [5/10], Train Loss: 0.9813, Test Loss: 1.3701, Val_Accuracy [62.4901185770751], Val_Accuracy2 [81.58102766798419], Val_Accuracy [71.89723320158103], Val_Accuracy2 [94.70355731225297]
+              precision    recall  f1-score   support
+
+           0       0.64      0.70      0.67       728
+           1       0.48      0.40      0.43       303
+           2       0.59      0.51      0.55       119
+           3       0.49      0.38      0.43       117
+           4       0.51      0.28      0.36        96
+           5       0.55      0.36      0.43       100
+           6       0.53      0.53      0.53       227
+           7       0.70      0.79      0.75       840
+
+    accuracy                           0.62      2530
+   macro avg       0.56      0.49      0.52      2530
+weighted avg       0.61      0.62      0.62      2530
+
+Counter({'chair': 1167, 'table': 417, 'sofa': 415, 'bed': 213, 'desk': 154, 'bookcase': 79, 'wardrobe': 54, 'misc': 20, 'tool': 11})
+{'table': '48.68', 'sofa': '75.90', 'bookcase': '69.62', 'chair': '63.67', 'desk': '53.90', 'bed': '63.85', 'wardrobe': '79.63', 'misc': '5.00', 'tool': '18.18'}

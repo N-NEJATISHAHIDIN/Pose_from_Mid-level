@@ -80,6 +80,9 @@ class PoseEstimationModelUpsampel_V1_MaskedFeatures(torch.nn.Module):
     self.fc2 = nn.Linear(512, 128)
     self.fc3 = nn.Linear(128, num_bins_az)
     self.fc4 = nn.Linear(128, num_bins_el)
+    self.sig = nn.Sigmoid()
+    self.tanh = nn.Tanh()
+    #self.bn = nn.BatchNorm1d(8)
 
   def forward(self, x, mask,flag):
 

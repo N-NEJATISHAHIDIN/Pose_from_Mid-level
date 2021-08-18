@@ -35,8 +35,8 @@ class PoseDataset(torch.utils.data.Dataset):
         # X = Image.open(self.path  + "/Pix3D/crop/" + ID[4:].split(".")[0]+".png")
         Z = read_image(self.path  + "/Pix3D/crop_mask/" + ID[4:].split(".")[0]+".png")
         # ,interpolation = Image.NEAREST
-        mask = transforms.Resize((self.mask_size,self.mask_size))(Z)
-        out = mask[0].reshape(1,self.mask_size,self.mask_size)
+        mask3 = transforms.Resize((self.mask_size,self.mask_size))(Z)
+        mask = mask3[0].reshape(1,self.mask_size,self.mask_size)
         # print(out.shape)
         edge_temp = torch.load(self.path  + '/Pix3D/featurs/normal/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
         normal_temp = torch.load(self.path  + '/Pix3D/featurs/edge_texture/'+ID[4:].split(".")[0]+'.pt', map_location=torch.device('cpu'))
@@ -51,7 +51,7 @@ class PoseDataset(torch.utils.data.Dataset):
             im_info = self.gt_D_mask_info[self.gt_D_mask_info.index.str.contains( "crop/"+ID[4:].split(".")[0])]
             root_path = self.path + "/Pix3D/D_mask_64/"+ im_info.iloc[0][1]+ "/"+ im_info.iloc[0][2]+ "/"+ im_info.iloc[0][3]+".obj"
             full_path = root_path + "/azimuth_{}_Elevation{}.png".format(y[0][0],y[0][1])
-            D_mask =  torch.from_numpy(np.asarray(Image.open(full_path).convert('1') , dtype=np.uint8)).reshape(1,64,64)
+            mask =  torch.from_numpy(np.asarray(Image.open(full_path).convert('1') , dtype=np.uint8)).reshape(1,64,64)
             
             #print(out.shape)
         # Z_D_mask = read_image(self.path  + "/Pix3D/D_mask/" + ID[4:].split(".")[0]+".png")
@@ -59,4 +59,4 @@ class PoseDataset(torch.utils.data.Dataset):
         # out = mask[0].reshape(1,self.mask_size,self.mask_size)
 
         #edge_temp.float(), 
-        return (features_output,D_mask.float()), (y[0][0],y[0][1],y[0][2]), ID.split(".")[0].split("/")[1],ID
+        return (features_output,mask.float()), (y[0][0],y[0][1],y[0][2]), ID.split(".")[0].split("/")[1],ID

@@ -72,7 +72,7 @@ def generate_label(data, n_bins, n_bins_elev = 5):
     
     
 def get_Dmask(az,el,ID,gt_D_mask_info):
-    masks = torch.empty(20,64,64)
+    masks = torch.empty(az.shape[0],64,64)
     path = "../../Datasets/pix3d"
     for i in range(az.shape[0]):
         im_info = gt_D_mask_info[gt_D_mask_info.index.str.contains( "crop/"+ID[i][4:].split(".")[0])]
@@ -81,7 +81,7 @@ def get_Dmask(az,el,ID,gt_D_mask_info):
         D_mask =  torch.from_numpy(np.asarray(Image.open(full_path).convert('1') , dtype=np.uint8))
         masks[i] = D_mask
 
-    return masks.reshape(20,1,64,64)
+    return masks.reshape(az.shape[0],1,64,64)
 
 def generate_Dmask(mask_size = 64):
     
