@@ -50,4 +50,5 @@ The models were evaluated in separate phases.
 |<p>Models , </p><p></p>|acc\_azimuth|acc\_azimuth2|
 | :- | :- | :- |
 | upsample_gt_D_mask |50.0|77.5|
+
 problem : model relies to much on mask (60%)
